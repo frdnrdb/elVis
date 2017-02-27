@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>elVis demo</title>
+<style>
+  * { transition: all .75s ease; }
+  #info { position: fixed; top: 20px; left: 20px; color: tomato; }
+</style>
+</head>
+  
+<body style="background:pink;padding-top:92vh;padding-bottom:110vh;">
+<div class="elvis one" style="margin:0 auto;min-height:40vh;width:60%;background:tomato;"></div>
+<div class="elvis two" style="margin:50vh auto 0;min-height:40vh;width:60%;background:tomato;"></div>
+<div class="elvis three" style="margin:50vh auto 0;min-height:40vh;width:60%;background:tomato;"></div>
+
+<div id="info">eventlistener: on</div>  
+  
+<script>
+  
+  
+elVis('elvis', demoFunction);
+
+
+function demoFunction(s){
+  console.log(s);
+
+  if (s.props && s.props.class) {
+    var box = document.querySelector('.'+s.props.class.split(' ').join('.'));
+    if (box) box.style.backgroundColor = '#333';
+  }
+  if (typeof s == 'string' && s.indexOf('off')>-1) {
+    document.querySelector('#info').innerHTML = 'eventlistener: off';
+    document.querySelector('#info').style.color = '#18b418';
+    document.body.style.backgroundColor = 'white';
+  }
+};
+
+
+function elVis(a,b,c){function l(a,c){function d(){0===j&&(window.removeEventListener("scroll",d),b("eventlistener off")),n(a)?a.check||(a.vis||(a.vis=0),a.timer||(a.timer=setInterval(function(){m(a,c)},k))):a.timer&&(clearInterval(a.timer),a.timer=void 0)}d(),window.addEventListener("scroll",d)}function m(a,c){if(a.vis+=k,a.vis>e){a.check=!0,j--,clearInterval(a.timer);var d={item:c+1+"/"+i.length,seen:(new Date).toLocaleString(),props:{}};[].slice.call(a.attributes).forEach(function(a){"style"!==a.nodeName&&(d.props[a.nodeName]=a.nodeValue)}),b(d)}}function n(a){var b=a.getBoundingClientRect(),c=window.innerHeight||doc.documentElement.clientHeight;return!(b.bottom-b.height*(d/100)<0||b.top+b.height*(d/100)>c)}if(c=c||{},"undefined"!=typeof window&&"string"==typeof a){var d=c.part||50,e=c.time||500,f=c.selector||"class",g={class:"getElementsByClassName",id:"getElementById",tag:"getElementsByTagName",attr:"querySelectorAll"},h=document[g[f]]("attr"===f?"["+a+"]":a);if(h&&0!==h.length){var i=h&&h.length?[].slice.call(h):[h],j=i.length,k=100;i.forEach(l)}}}  
+
+
+</script>
+
+</body>
+</html>
