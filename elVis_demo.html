@@ -8,39 +8,51 @@
 <title>elVis demo</title>
 <style>
   * { transition: all .75s ease; }
-  #info { position: fixed; top: 20px; left: 20px; color: tomato; }
+  body { text-align: center; }
+  img { -webkit-filter: grayscale(100%); filter: grayscale(100%); }
+  img.seen { -webkit-filter: grayscale(0%); filter: grayscale(0%); }
+  #info { position: fixed; top: 20px; left: 20px; color: #333; }
 </style>
 </head>
-  
-<body style="background:pink;padding-top:92vh;padding-bottom:110vh;">
-<div class="elvis one" style="margin:0 auto;min-height:40vh;width:60%;background:tomato;"></div>
-<div class="elvis two" style="margin:50vh auto 0;min-height:40vh;width:60%;background:tomato;"></div>
-<div class="elvis three" style="margin:50vh auto 0;min-height:40vh;width:60%;background:tomato;"></div>
 
-<div id="info">eventlistener: on</div>  
-  
+<body style="padding-top:90vh;padding-bottom:110vh;">
+
+<div class="elvis one" id="firstelement" some-attribute="some data" style="margin:0 auto 50vh;width:256px;height:256px;">
+  <a href="http://somewhere.internet">
+    <img src="https://cdn4.iconfinder.com/data/icons/ballicons-2-free/100/match-256.png">
+    <div class="info" child-data="demo"></div>
+  </a>
+</div>
+<div class="elvis two" id="secondelement" some-attribute="some data" style="margin:0 auto 50vh;width:256px;height:256px;">
+  <a href="http://somewhere.internet">
+    <img src="https://cdn4.iconfinder.com/data/icons/ballicons-2-free/100/pencil-256.png">
+  </a>
+</div>
+<div class="elvis three" id="thirdelement" some-attribute="some data" style="margin:0 auto 50vh;width:256px;height:256px;">
+  <img src="https://cdn2.iconfinder.com/data/icons/ballicons-2-free/100/fire_extinguisher-256.png">
+</div>
+
+<div id="info">check console</div>
+
 <script>
-  
-  
-elVis('elvis', demoFunction);
 
 
-function demoFunction(s){
-  console.log(s);
+elVis('elvis', demoFunction, {part: 100, time: 100, find: 'child-data'});
+console.log("elVis('elvis', demoFunction, {part: 100, time: 100, find: 'child-data'});");
 
-  if (s.props && s.props.class) {
-    var box = document.querySelector('.'+s.props.class.split(' ').join('.'));
-    if (box) box.style.backgroundColor = '#333';
+function demoFunction(o){
+  console.log(JSON.stringify(o, null ,2));
+
+  if (o.props && o.props.class) {
+    var box = document.querySelector('.'+o.props.class.split(' ').join('.'));
+    if (box) box.getElementsByTagName('img')[0].className += ' seen';
   }
-  if (typeof s == 'string' && s.indexOf('off')>-1) {
-    document.querySelector('#info').innerHTML = 'eventlistener: off';
-    document.querySelector('#info').style.color = '#18b418';
-    document.body.style.backgroundColor = 'white';
-  }
+
 };
 
 
-function elVis(a,b,c){function l(a,c){function d(){0===j&&(window.removeEventListener("scroll",d),b("eventlistener off")),n(a)?a.check||(a.vis||(a.vis=0),a.timer||(a.timer=setInterval(function(){m(a,c)},k))):a.timer&&(clearInterval(a.timer),a.timer=void 0)}d(),window.addEventListener("scroll",d)}function m(a,c){if(a.vis+=k,a.vis>e){a.check=!0,j--,clearInterval(a.timer);var d={item:c+1+"/"+i.length,seen:(new Date).toLocaleString(),props:{}};[].slice.call(a.attributes).forEach(function(a){"style"!==a.nodeName&&(d.props[a.nodeName]=a.nodeValue)}),b(d)}}function n(a){var b=a.getBoundingClientRect(),c=window.innerHeight||doc.documentElement.clientHeight;return!(b.bottom-b.height*(d/100)<0||b.top+b.height*(d/100)>c)}if(c=c||{},"undefined"!=typeof window&&"string"==typeof a){var d=c.part||50,e=c.time||500,f=c.selector||"class",g={class:"getElementsByClassName",id:"getElementById",tag:"getElementsByTagName",attr:"querySelectorAll"},h=document[g[f]]("attr"===f?"["+a+"]":a);if(h&&0!==h.length){var i=h&&h.length?[].slice.call(h):[h],j=i.length,k=100;i.forEach(l)}}}  
+function elVis(a,b,c){function m(a,b){function c(){0===k&&window.removeEventListener("scroll",c),o(a)?a.check||(a.vis||(a.vis=0),a.timer||(a.timer=setInterval(function(){n(a,b)},l))):a.timer&&(clearInterval(a.timer),a.timer=void 0)}c(),window.addEventListener("scroll",c)}function n(a,c){if(a.vis+=l,a.vis>e){a.check=!0,k--,clearInterval(a.timer);var d={item:c+1+"/"+j.length,seen:(new Date).toLocaleString(),props:{}};[].slice.call(a.attributes).forEach(function(a){"style"!==a.nodeName&&(d.props[a.nodeName]=a.nodeValue)}),f&&[].slice.call(a.getElementsByTagName("*")).map(function(a){var b=a[f]||[].slice.call(a.attributes).map(function(a){if(a.nodeName===f)return a.nodeValue}).join("");b&&!d.props[f]&&(d.props[f]=b)}),b(d)}}function o(a){var b=a.getBoundingClientRect(),c=window.innerHeight||doc.documentElement.clientHeight;return!(b.bottom-b.height*(d/100)<0||b.top+b.height*(d/100)>c)}if(c=c||{},"undefined"!=typeof window&&"string"==typeof a){var d=c.part||50,e=c.time||500,f=c.find,g=c.selector||"class",h={class:"getElementsByClassName",id:"getElementById",tag:"getElementsByTagName",attr:"querySelectorAll"},i=document[h[g]]("attr"===g?"["+a+"]":a);if(i&&0!==i.length){var j=i&&i.length?[].slice.call(i):[i],k=j.length,l=100;j.forEach(m)}}}
+
 
 
 </script>
