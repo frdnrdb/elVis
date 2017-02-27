@@ -79,7 +79,7 @@ function elVis ( query, callback, config ) {
             });
           }
 
-          callback(callbackObject);
+          callback(callbackObject, el);
 
       }
 
