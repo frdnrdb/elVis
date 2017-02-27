@@ -1,7 +1,7 @@
 # elVis
 element visibility / inview / impression
 
-Default: 
+Default:
 ~~~~  
 elVis('classname', callbackFunction);
 ~~~~  
@@ -20,7 +20,8 @@ Callback object:
 ~~~~  
 {
   "item": "1/3",
-  "seen": "27/02/2017, 10:58:07",
+  "time": "2017-02-28T09:47:55.575Z",
+  "top": "1135/4422",
   "props": {
     "class": "elvis one",
     "id": "firstelement",

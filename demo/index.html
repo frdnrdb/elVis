@@ -1,61 +1,95 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>elVis demo</title>
 <style>
-  * { transition: all .5s cubic-bezier(0, 0, 0, 1); }
-  body { text-align: center; background-color: #F8E4DD; padding: 90vh 0 40vh; font-family: monospace; }
-  body > div { border-radius: 50%; box-sizing: border-box; border: 0 solid #333; color: #fff; font-size: 12px; letter-spacing: 1px; line-height: 300px; background-color: #333; }
-  div.seen { line-height: 200px; color: transparent; }
-  div.seen:nth-child(1) { background-color: #D4A2BE; }
-  div.seen:nth-child(2) { background-color: #75597D; }
-  div.seen:nth-child(3) { background-color: #B0B8B4; }
-  img.seen { -webkit-filter: grayscale(0%); filter: grayscale(0%); }
-  #info { position: fixed; top: 20px; left: 20px; color: #333; text-align: left; }
+  body {
+    text-align: center;
+    margin: 8px;
+    padding: 0;
+    font-family: monospace;
+  }
+  section, pre {
+    display: block;
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  section div {
+    display: inline-block;
+    float: left;
+    height: 30vh;
+    line-height: 30vh;
+    border: 8px solid #fff;
+    background: #333;
+    color: #fff;
+    font-size: 14px;
+    letter-spacing: 1px;
+    box-sizing: border-box;
+    transition: all .5s cubic-bezier(0, 0, 0, 1);
+  }
+  section div.seen {
+    background: pink;
+    color: #333;
+  }
+  pre {
+    line-height: 2;
+    background: #f5f5f5;
+    padding: 40px 0;
+    border: 8px solid #fff;
+    box-sizing: border-box;
+    color: #0b95ea;
+  }
+  pre i {
+    color: #333;
+  }
 </style>
 </head>
-
 <body>
-
-<div class="selectedClass" id="first" title="the royal tenenbaums" style="margin:0 auto 50vh;width:300px;height:300px;">
-  <a href="http://somewhere.internet">
-    <span class="info" child-data="demo"></span>
-  </a>
-</div>
-<div class="selectedClass bypass" id="second" title="the life aquatic with steve zissou" style="margin:0 auto 50vh;width:300px;height:300px;"></div>
-<div class="selectedClass" id="third" title="the grand budapest hotel" style="margin:0 auto 50vh;width:300px;height:300px;"></div>
-
-<pre id="info">elVis('selectedClass:not(.bypass)', demoFunction, {part: 75, time: 500, find: 'href'})<br></pre>
-
+<pre>
+elVis('box.check', demoFunction, { part: 75, time: 1000 });
+<i>- at least 75% of elements with class 'box check' should be visible for at least 1 second.
+see console for callback object</i>
+</pre>
+<section></section>
 <script>
 
+var boxes = '',
+    widths = [20,40,60,80],
+    hundred = 0;
 
-elVis('selectedClass:not(.bypass)', demoFunction, {part: 75, time: 500, find: 'href'});
+for (var i = 0; i < 100; i++) {
 
+  var w = widths[Math.round(Math.random()*3)];
+  hundred += w;
+  if (hundred >= 80 || i === 99) {
+    var n = hundred - w;
+    w = 100 - n;
+    hundred = 0;
+  }
 
-document.querySelectorAll('div').forEach( function(el){
-  el.innerHTML = el.className;
-});
+  var c = 'box' + ( Math.round(Math.random()*1) ? ' check' : '' );
+  boxes += '<div class="'+c+'" style="min-width:'+w+'%;">'+c+'</div>';
 
+}
+
+document.getElementsByTagName('section')[0].innerHTML = boxes;
 
 function demoFunction(o, el){
 
-  el.style.borderWidth = '50px';
   el.className += ' seen';
-
-  document.getElementById('info').innerHTML += '<br>' + JSON.stringify(o, null ,2);
+  el.innerHTML = o.item;
+  console.log(JSON.stringify(o,null,2));
 
 };
 
+elVis('box.check', demoFunction, { part: 75, time: 1000 });
 
-function elVis(e,t,n){function i(e,t){function n(){0===f&&window.removeEventListener("scroll",n),o(e)?e.check||(e.vis||(e.vis=0),e.timer||(e.timer=setInterval(function(){l(e,t)},h))):e.timer&&(clearInterval(e.timer),e.timer=void 0)}n(),window.addEventListener("scroll",n)}function l(e,n){if(e.vis+=h,e.vis>a){e.check=!0,f--,clearInterval(e.timer);var i={item:n+1+"/"+g.length,top:r(e),time:(new Date).toLocaleString(),props:{}};[].slice.call(e.attributes).forEach(function(e){"style"!==e.nodeName&&(i.props[e.nodeName]=e.nodeValue)}),s&&[].slice.call(e.getElementsByTagName("*")).map(function(e){var t=e[s]||[].slice.call(e.attributes).map(function(e){if(e.nodeName===s)return e.nodeValue}).join("");t&&!i.props[s]&&(i.props[s]=t)}),t(i,e)}}function o(e){var t=e.getBoundingClientRect(),n=window.innerHeight||doc.documentElement.clientHeight;return!(t.bottom-t.height*(c/100)<0||t.top+t.height*(c/100)>n)}function r(e){var t=e.getBoundingClientRect(),n=document.body,i=document.documentElement,l=Math.max(n.scrollHeight,n.offsetHeight,i.clientHeight,i.scrollHeight,i.offsetHeight),o=t.top+window.pageYOffset||i.scrollTop||n.scrollTop;return{percent:Math.round(100*o/l),pixels:Math.round(o)+"/"+l}}if(n=n||{},"undefined"!=typeof window&&"string"==typeof e){var c=n.part||50,a=n.time||500,s=n.find,m=n.selector||"class",d={class:"getElementsByClassName",id:"getElementById",tag:"getElementsByTagName",attr:"querySelectorAll"},u="attr"===m?"["+e+"]":e;if(e.match(/[.#:()\[\]]/)&&(u=("class"==m?".":"id"==m?"#":"")+u,m="attr"),elements=document[d[m]](u),elements&&0!==elements.length){var g=elements&&elements.length?[].slice.call(elements):[elements],f=g.length,h=100;g.forEach(i)}}}
-
+function elVis(e,t,n){"use strict";function i(e,t){function n(){0===p&&window.removeEventListener("scroll",n),l(e)?e.check||(e.vis||(e.vis=0),e.timer||(e.timer=setInterval(function(){o(e,t)},a))):e.timer&&(clearInterval(e.timer),e.timer=void 0)}n(),window.addEventListener("scroll",n)}function o(e,n){e.vis+=a,e.vis>m&&(e.check=!0,p--,clearInterval(e.timer),t({item:n+1+"/"+v.length,top:r(e),time:(new Date).toISOString(),props:c(e,{})},e))}function l(e){var t=e.getBoundingClientRect(),n=window.innerHeight||document.documentElement.clientHeight;return!(t.bottom-t.height*(s/100)<0||t.top+t.height*(s/100)>n)}function r(e){var t=e.getBoundingClientRect(),n=document.body,i=document.documentElement,o=Math.max(n.scrollHeight,n.offsetHeight,i.clientHeight,i.scrollHeight,i.offsetHeight),l=t.top+window.pageYOffset||i.scrollTop||n.scrollTop;return Math.round(l)+"/"+o}function c(e,t){return[].slice.call(e.attributes).forEach(function(e){"style"!==e.nodeName&&(t[e.nodeName]=e.nodeValue)}),u&&[].slice.call(e.getElementsByTagName("*")).map(function(e){var n=e[u]||[].slice.call(e.attributes).map(function(e){if(e.nodeName===u)return e.nodeValue}).join("");n&&!t[u]&&(t[u]=n)}),t}if("undefined"!==window&&"string"==typeof e){n=n||{};var a=100,s=n.part||50,m=n.time||500,u=n.find,d=n.selector||"class",g="attr"===d?"["+e+"]":e,f={class:"getElementsByClassName",id:"getElementById",tag:"getElementsByTagName",attr:"querySelectorAll"};e.match(/[.#:()\[\]]/)&&(g=("class"==d?".":"id"==d?"#":"")+g,d="attr");var h=document[f[d]](g);if(h&&0!==h.length){var v=h&&h.length?[].slice.call(h):[h],p=v.length;v.forEach(i)}}}
 
 </script>
-
 </body>
 </html>

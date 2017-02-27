@@ -2,3 +2,4 @@ node_modules
 package.json
 gulpfile.js
 demo/CNAME
+*.log

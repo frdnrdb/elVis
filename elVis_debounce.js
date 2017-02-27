@@ -7,8 +7,10 @@ function elVis( query, callback, config ) {
     config = config || {};
 
     var timerInterval = 100,
+        eventDelay = 250,
+        eventHandler = config.scroll || 'debounce',
         visiblePercentage = config.part || 50,
-        visibleMilliseconds = config.time || 500,
+        visibleMilliseconds = Math.max( (config.time || 500) - eventDelay, 0 ),
         additionalProp = config.find,
         docFuncSelector = config.selector || 'class',
         documentQuery = docFuncSelector === 'attr' ? '[' + query + ']' : query,
@@ -19,6 +21,7 @@ function elVis( query, callback, config ) {
             attr:   'querySelectorAll'
         };
 
+
     /*
     use querySelectorAll if the query contains advanced selectors/ pseudo-classes
     */
@@ -27,38 +30,79 @@ function elVis( query, callback, config ) {
         docFuncSelector = 'attr';
     }
 
+
     var elements = document[ documentFunc[ docFuncSelector ] ]( documentQuery );
     if ( !elements || elements.length === 0 ) return;
-    var list = elements && elements.length ? [].slice.call( elements ) : [ elements ],
-        remaining = list.length;
+    var list = elements && elements.length ? [].slice.call( elements ) : [ elements ];
 
-    list.forEach( checkElVis );
 
-    function checkElVis( el, i ) {
-        function check() {
-            if ( remaining === 0 ) window.removeEventListener( 'scroll', check );
-            if ( isElVis( el ) ) {
-                if ( !el.check ) {
-                    if ( !el.vis ) el.vis = 0;
-                    if ( !el.timer ) el.timer = setInterval( function () {
-                        timer( el, i );
-                    }, timerInterval );
+    var ecologicalEventHandlers = {
+        throttle: function(delay, callback) {
+            var previousCall = new Date().getTime();
+            return function() {
+                var time = new Date().getTime();
+                if ((time - previousCall) >= delay) {
+                    previousCall = time;
+                    callback.apply(null, arguments);
                 }
-            }
-            else if ( el.timer ) {
-                clearInterval( el.timer );
-                el.timer = undefined;
+            };
+        },
+        debounce: function(delay, callback) {
+            var timeout = null;
+            return function () {
+                if (timeout) clearTimeout(timeout);
+                var args = arguments;
+                timeout = setTimeout(function () {
+                    callback.apply(null, arguments);
+                    timeout = null;
+                }, delay);
+            };
+        }
+    };
+
+
+    initElVis(list);
+
+
+    function initElVis( list ) {
+
+        var throttler = ecologicalEventHandlers[eventHandler](eventDelay, check);
+
+        function check() {
+            list.remaining = 0;
+            list.forEach(checkElVis);
+            if (list.remaining === 0) {
+              window.removeEventListener( 'scroll', throttler );
             }
         }
         check();
-        window.addEventListener( 'scroll', check );
+        window.addEventListener( 'scroll', throttler );
+
     }
+
+
+    function checkElVis( el, i ) {
+        if ( !el ) return;
+        if ( isElVis(el) ) startImpressionTime(el, i);
+        else pauseImpressionTime(el);
+        list.remaining ++;
+    }
+
+
+    function isElVis(el){
+        var box = el.getBoundingClientRect(),
+            dom = window.innerHeight || document.documentElement.clientHeight,
+            visTop = box.bottom - ( box.height * ( visiblePercentage / 100 ) ) < 0,
+            visBtm = box.top + ( box.height * ( visiblePercentage / 100 ) ) > dom;
+        if ( visTop || visBtm ) return false;
+        return true;
+    }
+
 
     function timer( el, i ) {
         el.vis += timerInterval;
         if ( el.vis > visibleMilliseconds ) {
             el.check = true;
-            remaining--;
             clearInterval( el.timer );
             callback( {
                 item: i + 1 + '/' + list.length,
@@ -66,15 +110,27 @@ function elVis( query, callback, config ) {
                 time: new Date().toISOString(),
                 props: getProps( el, {} )
             }, el );
+
+            list[i] = 0;
         }
     }
 
-    function isElVis( el ) {
-        var box = el.getBoundingClientRect(),
-            dom = window.innerHeight || document.documentElement.clientHeight;
-        if ( box.bottom - ( box.height * ( visiblePercentage / 100 ) ) < 0 || box.top + ( box.height * ( visiblePercentage / 100 ) ) > dom ) return false;
-        return true;
+
+    function startImpressionTime(el, i) {
+      if ( !el.check ) {
+          if ( !el.vis ) el.vis = 0;
+          if ( !el.timer ) el.timer = setInterval( function () {
+              timer( el, i );
+          }, timerInterval );
+      }
     }
+
+
+    function pauseImpressionTime(el) {
+        clearInterval( el.timer );
+        el.timer = undefined;
+    }
+
 
     function getOffsetTop( el ) {
         var box = el.getBoundingClientRect(),
@@ -84,6 +140,7 @@ function elVis( query, callback, config ) {
             top = box.top + window.pageYOffset || html.scrollTop || body.scrollTop;
         return Math.round( top ) + '/' + height;
     }
+
 
     function getProps( el, obj ) {
         [].slice.call( el.attributes )
