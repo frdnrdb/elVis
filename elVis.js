@@ -14,7 +14,16 @@ function elVis ( query, callback, config ) {
           tag: 'getElementsByTagName',
           attr: 'querySelectorAll'
         },
-        elements = document[documentFunc[selector]](selector === 'attr' ? '['+query+']' : query);
+
+        documentQuery = selector === 'attr' ? '['+query+']' : query;
+
+        // use querySelectorAll if the query contains advanced selectors/ pseudo-classes
+        if ( query.match(/[.#:()\[\]]/) ) {
+          documentQuery = (selector == 'class' ? '.' : selector == 'id' ? '#' : '') + documentQuery;
+          selector = 'attr';
+        }
+
+        elements = document[documentFunc[selector]](documentQuery);
 
     if (!elements || elements.length === 0) return;
 
@@ -64,9 +73,12 @@ function elVis ( query, callback, config ) {
           clearInterval(el.timer);
 
 
+          // callback object
+
           var callbackObject = {
             item: i+1+'/'+list.length,
-            seen: new Date().toLocaleString(),
+            top: getOffset(el),
+            time: new Date().toLocaleString(),
             props: {}
           };
 
@@ -74,7 +86,7 @@ function elVis ( query, callback, config ) {
 
           if (additionalProp) {
             [].slice.call(el.getElementsByTagName('*')).map( function(o){
-              var propVal = o[additionalProp] || [].slice.call(o.attributes).map(function(a){ if (a.nodeName === additionalProp) return a.nodeValue; }).join('');
+              var propVal = o[additionalProp] || [].slice.call(o.attributes).map(function(a){ if (a.nodeName === additionalProp ) return a.nodeValue; }).join('');
               if (propVal && !callbackObject.props[additionalProp]) callbackObject.props[additionalProp] = propVal;
             });
           }
@@ -96,6 +108,19 @@ function elVis ( query, callback, config ) {
 
       return true;
 
+    }
+
+
+
+    function getOffset(el) {
+
+        var box = el.getBoundingClientRect(),
+            body = document.body,
+            html = document.documentElement,
+            height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight ),
+            top = box.top + window.pageYOffset || html.scrollTop || body.scrollTop;
+
+        return { percent: Math.round(top*100/height), pixels: Math.round(top)+'/'+height };
     }
 
 
