@@ -20,7 +20,11 @@ Callback object:
 ~~~~  
 {
   "item": "1/3",
-  "seen": "27/02/2017, 10:58:07",
+  "time": "27/02/2017, 10:58:07",
+  "top": {
+      "percent": 26,
+      "pixels": "1135/4422"
+    },  
   "props": {
     "class": "elvis one",
     "id": "firstelement",
