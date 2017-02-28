@@ -6,22 +6,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>elVis demo</title>
 <style>
-  * {
-    transition: all .5s cubic-bezier(0, 0, 0, 1);
-  }
   body {
     text-align: center;
     margin: 8px;
     padding: 0;
     font-family: monospace;
   }
-  body > * {
+  section, pre {
     display: block;
     width: 100%;
     max-width: 1280px;
     margin: 0 auto;
   }
-
   section div {
     display: inline-block;
     float: left;
@@ -33,6 +29,7 @@
     font-size: 14px;
     letter-spacing: 1px;
     box-sizing: border-box;
+    transition: all .5s cubic-bezier(0, 0, 0, 1);
   }
   section div.seen {
     background: pink;
@@ -50,12 +47,11 @@
     color: #333;
   }
 </style>
-<script src="./../elVis.js"></script>
 </head>
 <body>
 <pre>
 elVis('box.check', demoFunction, { part: 75, time: 1000 });
-<i>- at least 75% of elements with class 'box check' should be visible for at least 1 second
+<i>- at least 75% of elements with class 'box check' should be visible for at least 1 second.
 see console for callback object</i>
 </pre>
 <section></section>
@@ -69,19 +65,18 @@ for (var i = 0; i < 100; i++) {
 
   var w = widths[Math.round(Math.random()*3)];
   hundred += w;
-  if (hundred >= 80) {
+  if (hundred >= 80 || i === 99) {
     var n = hundred - w;
     w = 100 - n;
     hundred = 0;
   }
 
   var c = 'box' + ( Math.round(Math.random()*1) ? ' check' : '' );
-  boxes += '<div class="'+c+'" style=";min-width:'+w+'%;">'+c+'</div>';
+  boxes += '<div class="'+c+'" style="min-width:'+w+'%;">'+c+'</div>';
 
 }
 
-var container = document.getElementsByTagName('section')[0];
-container.innerHTML = boxes;
+document.getElementsByTagName('section')[0].innerHTML = boxes;
 
 function demoFunction(o, el){
 
@@ -92,6 +87,8 @@ function demoFunction(o, el){
 };
 
 elVis('box.check', demoFunction, { part: 75, time: 1000 });
+
+function elVis(e,t,n){"use strict";function i(e,t){function n(){0===p&&window.removeEventListener("scroll",n),l(e)?e.check||(e.vis||(e.vis=0),e.timer||(e.timer=setInterval(function(){o(e,t)},a))):e.timer&&(clearInterval(e.timer),e.timer=void 0)}n(),window.addEventListener("scroll",n)}function o(e,n){e.vis+=a,e.vis>m&&(e.check=!0,p--,clearInterval(e.timer),t({item:n+1+"/"+v.length,top:r(e),time:(new Date).toISOString(),props:c(e,{})},e))}function l(e){var t=e.getBoundingClientRect(),n=window.innerHeight||document.documentElement.clientHeight;return!(t.bottom-t.height*(s/100)<0||t.top+t.height*(s/100)>n)}function r(e){var t=e.getBoundingClientRect(),n=document.body,i=document.documentElement,o=Math.max(n.scrollHeight,n.offsetHeight,i.clientHeight,i.scrollHeight,i.offsetHeight),l=t.top+window.pageYOffset||i.scrollTop||n.scrollTop;return Math.round(l)+"/"+o}function c(e,t){return[].slice.call(e.attributes).forEach(function(e){"style"!==e.nodeName&&(t[e.nodeName]=e.nodeValue)}),u&&[].slice.call(e.getElementsByTagName("*")).map(function(e){var n=e[u]||[].slice.call(e.attributes).map(function(e){if(e.nodeName===u)return e.nodeValue}).join("");n&&!t[u]&&(t[u]=n)}),t}if("undefined"!==window&&"string"==typeof e){n=n||{};var a=100,s=n.part||50,m=n.time||500,u=n.find,d=n.selector||"class",g="attr"===d?"["+e+"]":e,f={class:"getElementsByClassName",id:"getElementById",tag:"getElementsByTagName",attr:"querySelectorAll"};e.match(/[.#:()\[\]]/)&&(g=("class"==d?".":"id"==d?"#":"")+g,d="attr");var h=document[f[d]](g);if(h&&0!==h.length){var v=h&&h.length?[].slice.call(h):[h],p=v.length;v.forEach(i)}}}
 
 </script>
 </body>
