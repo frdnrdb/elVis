@@ -22,7 +22,7 @@ function elVis( query, callback, config ) {
     /*
     use querySelectorAll if the query contains advanced selectors/ pseudo-classes
     */
-    if ( query.match( /[.#:()\[\]]/ ) ) {
+    if ( query.match( /[>.#:()\[\]]/ ) ) {
         documentQuery = ( docFuncSelector == 'class' ? '.' : docFuncSelector == 'id' ? '#' : '' ) + documentQuery;
         docFuncSelector = 'attr';
     }

@@ -5,90 +5,706 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>elVis demo</title>
+<link href="https://fonts.googleapis.com/css?family=Karla:400,700" rel="stylesheet">
 <style>
   body {
     text-align: center;
-    margin: 8px;
+    margin: 0;
     padding: 0;
     font-family: monospace;
   }
-  section, pre {
+  section {
     display: block;
-    width: 100%;
-    max-width: 1280px;
+    max-width: 1200px;
     margin: 0 auto;
+    padding-top: 88px;
   }
   section div {
     display: inline-block;
     float: left;
     height: 30vh;
-    line-height: 30vh;
+    line-height: 28vh;
     border: 8px solid #fff;
-    background: #333;
+    background: #444;
     color: #fff;
     font-size: 14px;
     letter-spacing: 1px;
     box-sizing: border-box;
     transition: all .5s cubic-bezier(0, 0, 0, 1);
+    position: relative;
   }
-  section div.seen {
-    background: pink;
-    color: #333;
+  section div.check {
+    background: #444;
   }
+  section div:after {
+    transition: all .5s cubic-bezier(0, 0, 0, 1);
+    content: "";
+    width:33.33%;
+    height:100%;
+    left: 0;
+    color: #444;
+    display: block;
+    position: absolute;
+    z-index: 10;
+    top: 0;
+  }
+   section div:before {
+    transition: all .5s cubic-bezier(0, 0, 0, 1);
+    content: "";
+    width:33.33%;
+    height:100%;
+    left: 33.33%;
+    color: #444;
+    display: block;
+    position: absolute;
+    top: 0;
+  }
+
+  section div.new {
+    background: #A561FF;
+  }
+  section div.bad:before {
+    background: #FD72AD;
+  }
+  section div.seen:after {
+    background: #FCCE9E;
+  }
+
   pre {
     line-height: 2;
     background: #f5f5f5;
     padding: 40px 0;
-    border: 8px solid #fff;
     box-sizing: border-box;
     color: #0b95ea;
+    margin: 0 0 8px;
+    padding-top: 116px;
+    display: block;
+
   }
   pre i {
-    color: #333;
+    color: #444;
+  }
+  header {
+    width: 100%;
+    background: #444;
+    padding-top: 17px;
+    box-sizing: border-box;
+    height: 96px;
+    display: flex;
+    flex-direction: row;
+    color: #fff;
+    font-family: 'Karla';
+    font-size: 75%;
+    justify-content: center;
+    align-content: center;
+    position: fixed;
+    z-index: 99;
+    border-bottom: 16px solid #fff;
+  }
+  header > div {
+    width:33.33%;
+    box-sizing: border-box;
+    background: #444;
+    text-align: left;
+    padding: 0 7.5%;
+    flex-basis: 20%;
+    flex-grow: 1;
+  }
+  header > div > b {
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+    display: inline-block;
+  }
+  header > div > div {
+    width:100%;
+    border-bottom: 1px dotted rgba(255,255,255,.25);
+  }
+  header > div > div span {
+    display: inline-block;
+    float: right;
+  }
+  .badDone .badText, .goodDone .goodText, .newDone .newText {
+    opacity: .6;
+  }
+  .dim {
+    opacity: .36;
+    letter-spacing: 1px;
+    display: inline;
+  }
+  footer {
+    display: block;
+    min-height: 100px;
+    clear: both;
   }
 </style>
-<script src="./../elVis_debounce.js"></script>
-  
 </head>
 <body>
-<pre>
-elVis('box.check', demoFunction, { part: 75, time: 1000 });
-<i>- at least 75% of elements with class 'box check' should be visible for at least 1 second.
-see console for callback object</i>
-</pre>
+<header>
+  <div>
+    <b style="color:#FCCE9E;">throttled scroll event</b> <span class="dim" id="goodtotal"></span>
+    <div class="goodText">scroll events<span id="goodscrolls">0</span></div>
+    <div class="goodText">visibility calculations<span id="goodcalcs">0</span></div>
+  </div>
+  <div>
+    <b style="color:#A561FF;">debounced scroll event</b> <span class="dim" id="newtotal"></span>
+    <div class="newText">scroll events<span id="newscrolls">0</span></div>
+    <div class="newText">visibility calculations<span id="newcalcs">0</span></div>
+  </div>
+  <div>
+    <b style="color:#FD72AD;">normal scroll event</b> <span class="dim" id="badtotal"></span>
+    <div class="badText">scroll events<span id="badscrolls">0</span></div>
+    <div class="badText">visibility calculations<span id="badcalcs">0</span></div>
+  </div>
+</header>
 <section></section>
+<footer></footer>
 <script>
 
-var boxes = '',
+var goodcalcs = 0,
+    badcalcs = 0,
+    newcalcs = 0,
+    newscrolls = 0,
+    goodscrolls = 0,
+    badscrolls = 0;
+
+var goodtotal = 1,
+    badtotal = 1,
+    newtotal = 1,
+    listlength = 0;
+
+var globalEventDelay = 350;
+
+var count = 40,
+    boxes = '',
     widths = [20,40,60,80],
     hundred = 0;
 
-for (var i = 0; i < 50; i++) {
+for (var i = 0; i < count; i++) {
 
   var w = widths[Math.round(Math.random()*3)];
   hundred += w;
-  if (hundred >= 80 || i === 99) {
+  if (hundred >= 80 || i === count - 1) {
     var n = hundred - w;
     w = 100 - n;
     hundred = 0;
   }
 
-  var c = 'box' + ( Math.round(Math.random()*1) ? ' check' : '' );
-  boxes += '<div class="'+c+'" style="min-width:'+w+'%;">'+c+'</div>';
+  var cls = ( Math.round(Math.random()*1) ? ' badcheck newcheck check' : false ),
+      c = 'box' + cls || '';
+  boxes += '<div class="'+c+'" style="width:'+w+'%;">'+(cls?'elVis':'')+'</div>';
 
 }
 
 document.getElementsByTagName('section')[0].innerHTML = boxes;
 
 function demoFunction(o, el){
-
   el.className += ' seen';
-  el.innerHTML = o.item;
-  console.log(JSON.stringify(o,null,2));
+  document.getElementById('goodtotal').innerHTML = (goodtotal++)+'/'+listlength;
 
-};
+}
 
-elVis('box.check', demoFunction, { part: 75, time: 100 });
+function badDemoFunction(o, el){
+  el.className += ' bad';
+  document.getElementById('badtotal').innerHTML = (badtotal++)+'/'+listlength;
+}
+
+function newDemoFunction(o, el){
+  el.className += ' new';
+  document.getElementById('newtotal').innerHTML = (newtotal++)+'/'+listlength;
+}
+
+
+badElVis('box.badcheck', badDemoFunction, { part: 75, time: 0 });
+newElVis('box.newcheck', newDemoFunction, { part: 75, time: 0, scroll: 'debounce' });
+elVis('box.check', demoFunction, { part: 75, time: 0, scroll: 'throttle' });
+
+
+function newElVis( query, callback, config ) {
+
+    "use strict";
+
+    if ( window === 'undefined' || typeof query !== 'string' ) return;
+
+    config = config || {};
+
+    var timerInterval = 100,
+        eventDelay = globalEventDelay,
+        eventHandler = config.scroll || 'debounce',
+        visiblePercentage = config.part || 50,
+        visibleMilliseconds = Math.max( (config.time || 500) - eventDelay, 0 ),
+        additionalProp = config.find,
+        docFuncSelector = config.selector || 'class',
+        documentQuery = docFuncSelector === 'attr' ? '[' + query + ']' : query,
+        documentFunc = {
+            class:  'getElementsByClassName',
+            id:     'getElementById',
+            tag:    'getElementsByTagName',
+            attr:   'querySelectorAll'
+        };
+
+
+    /*
+    use querySelectorAll if the query contains advanced selectors/ pseudo-classes
+    */
+    if ( query.match( /[>.#:()\[\]]/ ) ) {
+        documentQuery = ( docFuncSelector == 'class' ? '.' : docFuncSelector == 'id' ? '#' : '' ) + documentQuery;
+        docFuncSelector = 'attr';
+    }
+
+
+    var elements = document[ documentFunc[ docFuncSelector ] ]( documentQuery );
+    if ( !elements || elements.length === 0 ) return;
+    var list = elements && elements.length ? [].slice.call( elements ) : [ elements ];
+    listlength = list.length;
+
+    var ecologicalEventHandlers = {
+        throttle: function(delay, callback) {
+            var previousCall = new Date().getTime();
+            var scrollevents = 1;
+
+            return function() {
+
+                scrollevents++;
+                goodscrolls++;
+                document.getElementById('newscrolls').innerHTML = goodscrolls;
+
+                var time = new Date().getTime();
+                if ((time - previousCall) >= delay) {
+                    previousCall = time;
+                    scrollevents = 1;
+                    callback.apply(null, arguments);
+                }
+            };
+        },
+        debounce: function(delay, callback) {
+            var timeout = null;
+            var scrollevents = 1;
+            return function () {
+
+                scrollevents++;
+                goodscrolls++;
+                document.getElementById('newscrolls').innerHTML = goodscrolls;
+
+
+                if (timeout) clearTimeout(timeout);
+                var args = arguments;
+                timeout = setTimeout(function () {
+                    timeout = null;
+                    scrollevents = 1;
+                    callback.apply(null, arguments);
+                }, delay);
+            };
+        }
+    };
+
+
+    initElVis(list);
+
+
+    function initElVis( list ) {
+
+        var throttler = ecologicalEventHandlers[eventHandler](eventDelay, check);
+
+        function check() {
+            list.newremaining = 0;
+            list.forEach(checkElVis);
+            if (list.newremaining === 0) {
+              window.removeEventListener( 'scroll', throttler );
+              document.getElementsByTagName("body")[0].className += " newDone"
+            }
+        }
+
+        check();
+        window.addEventListener( 'scroll', throttler );
+
+    }
+
+
+
+    function checkElVis( el, i ) {
+        if ( !el ) return;
+        if ( isElVis(el) ) startImpressionTime(el, i);
+        else pauseImpressionTime(el);
+        list.newremaining ++;
+        newcalcs++;
+        document.getElementById('newcalcs').innerHTML = newcalcs;
+    }
+
+
+    function isElVis(el){
+        var box = el.getBoundingClientRect(),
+            dom = window.innerHeight || document.documentElement.clientHeight,
+            visTop = box.bottom - ( box.height * ( visiblePercentage / 100 ) ) < 0,
+            visBtm = box.top + ( box.height * ( visiblePercentage / 100 ) ) > dom;
+        if ( visTop || visBtm ) return false;
+        return true;
+    }
+
+
+    function timer( el, i ) {
+        el.newvis += timerInterval;
+        if ( el.newvis > visibleMilliseconds ) {
+            el.newcheck = true;
+            clearInterval( el.newtimer );
+            callback( {
+                item: i + 1 + '/' + list.length,
+                top: getOffsetTop( el ),
+                time: new Date().toISOString(),
+                props: getProps( el, {} )
+            }, el );
+
+            list[i] = 0;
+        }
+    }
+
+
+    function startImpressionTime(el, i) {
+      if ( !el.newcheck ) {
+          if ( !el.newvis ) el.newvis = 0;
+          if ( !el.newtimer ) el.newtimer = setInterval( function () {
+              timer( el, i );
+          }, timerInterval );
+      }
+    }
+
+
+    function pauseImpressionTime(el) {
+        clearInterval( el.newtimer );
+        el.newtimer = undefined;
+    }
+
+
+    function getOffsetTop( el ) {
+        var box = el.getBoundingClientRect(),
+            body = document.body,
+            html = document.documentElement,
+            height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight ),
+            top = box.top + window.pageYOffset || html.scrollTop || body.scrollTop;
+        return Math.round( top ) + '/' + height;
+    }
+
+
+    function getProps( el, obj ) {
+        [].slice.call( el.attributes )
+            .forEach( function ( o ) {
+                if ( o.nodeName !== 'style' ) obj[ o.nodeName ] = o.nodeValue;
+            } );
+        if ( additionalProp ) {
+            [].slice.call( el.getElementsByTagName( '*' ) )
+                .map( function ( o ) {
+                    var propVal = o[ additionalProp ] || [].slice.call( o.attributes )
+                        .map( function ( a ) {
+                            if ( a.nodeName === additionalProp ) return a.nodeValue;
+                        } )
+                        .join( '' );
+                    if ( propVal && !obj[ additionalProp ] ) obj[ additionalProp ] = propVal;
+                } );
+        }
+        return obj;
+    }
+
+}
+function elVis( query, callback, config ) {
+
+    "use strict";
+
+    if ( window === 'undefined' || typeof query !== 'string' ) return;
+
+    config = config || {};
+
+    var timerInterval = 100,
+        eventDelay = globalEventDelay,
+        eventHandler = config.scroll || 'debounce',
+        visiblePercentage = config.part || 50,
+        visibleMilliseconds = Math.max( (config.time || 500) - eventDelay, 0 ),
+        additionalProp = config.find,
+        docFuncSelector = config.selector || 'class',
+        documentQuery = docFuncSelector === 'attr' ? '[' + query + ']' : query,
+        documentFunc = {
+            class:  'getElementsByClassName',
+            id:     'getElementById',
+            tag:    'getElementsByTagName',
+            attr:   'querySelectorAll'
+        };
+
+
+    /*
+    use querySelectorAll if the query contains advanced selectors/ pseudo-classes
+    */
+    if ( query.match( /[>.#:()\[\]]/ ) ) {
+        documentQuery = ( docFuncSelector == 'class' ? '.' : docFuncSelector == 'id' ? '#' : '' ) + documentQuery;
+        docFuncSelector = 'attr';
+    }
+
+
+    var elements = document[ documentFunc[ docFuncSelector ] ]( documentQuery );
+    if ( !elements || elements.length === 0 ) return;
+    var list = elements && elements.length ? [].slice.call( elements ) : [ elements ];
+    listlength = list.length;
+
+    var ecologicalEventHandlers = {
+        throttle: function(delay, callback) {
+            var previousCall = new Date().getTime();
+            var scrollevents = 1;
+
+            return function() {
+
+                scrollevents++;
+                goodscrolls++;
+                document.getElementById('goodscrolls').innerHTML = goodscrolls;
+
+                var time = new Date().getTime();
+                if ((time - previousCall) >= delay) {
+                    previousCall = time;
+                    scrollevents = 1;
+                    callback.apply(null, arguments);
+                }
+            };
+        },
+        debounce: function(delay, callback) {
+            var timeout = null;
+            var scrollevents = 1;
+            return function () {
+
+                scrollevents++;
+                goodscrolls++;
+                document.getElementById('goodscrolls').innerHTML = goodscrolls;
+
+
+                if (timeout) clearTimeout(timeout);
+                var args = arguments;
+                timeout = setTimeout(function () {
+                    timeout = null;
+                    scrollevents = 1;
+                    callback.apply(null, arguments);
+                }, delay);
+            };
+        }
+    };
+
+
+    initElVis(list);
+
+
+    function initElVis( list ) {
+
+        var throttler = ecologicalEventHandlers[eventHandler](eventDelay, check);
+
+        function check() {
+            list.remaining = 0;
+            list.forEach(checkElVis);
+            if (list.remaining === 0) {
+              window.removeEventListener( 'scroll', throttler );
+              document.getElementsByTagName("body")[0].className += " goodDone"
+            }
+        }
+
+        check();
+        window.addEventListener( 'scroll', throttler );
+
+    }
+
+
+    function checkElVis( el, i ) {
+        if ( !el ) return;
+        if ( isElVis(el) ) startImpressionTime(el, i);
+        else pauseImpressionTime(el);
+        list.remaining ++;
+        goodcalcs++;
+        document.getElementById('goodcalcs').innerHTML = goodcalcs;
+    }
+
+
+    function isElVis(el){
+        var box = el.getBoundingClientRect(),
+            dom = window.innerHeight || document.documentElement.clientHeight,
+            visTop = box.bottom - ( box.height * ( visiblePercentage / 100 ) ) < 0,
+            visBtm = box.top + ( box.height * ( visiblePercentage / 100 ) ) > dom;
+        if ( visTop || visBtm ) return false;
+        return true;
+    }
+
+
+    function timer( el, i ) {
+        el.vis += timerInterval;
+        if ( el.vis > visibleMilliseconds ) {
+            el.check = true;
+            clearInterval( el.timer );
+            callback( {
+                item: i + 1 + '/' + list.length,
+                top: getOffsetTop( el ),
+                time: new Date().toISOString(),
+                props: getProps( el, {} )
+            }, el );
+
+            list[i] = 0;
+        }
+    }
+
+
+    function startImpressionTime(el, i) {
+      if ( !el.check ) {
+          if ( !el.vis ) el.vis = 0;
+          if ( !el.timer ) el.timer = setInterval( function () {
+              timer( el, i );
+          }, timerInterval );
+      }
+    }
+
+
+    function pauseImpressionTime(el) {
+        clearInterval( el.timer );
+        el.timer = undefined;
+    }
+
+
+    function getOffsetTop( el ) {
+        var box = el.getBoundingClientRect(),
+            body = document.body,
+            html = document.documentElement,
+            height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight ),
+            top = box.top + window.pageYOffset || html.scrollTop || body.scrollTop;
+        return Math.round( top ) + '/' + height;
+    }
+
+
+    function getProps( el, obj ) {
+        [].slice.call( el.attributes )
+            .forEach( function ( o ) {
+                if ( o.nodeName !== 'style' ) obj[ o.nodeName ] = o.nodeValue;
+            } );
+        if ( additionalProp ) {
+            [].slice.call( el.getElementsByTagName( '*' ) )
+                .map( function ( o ) {
+                    var propVal = o[ additionalProp ] || [].slice.call( o.attributes )
+                        .map( function ( a ) {
+                            if ( a.nodeName === additionalProp ) return a.nodeValue;
+                        } )
+                        .join( '' );
+                    if ( propVal && !obj[ additionalProp ] ) obj[ additionalProp ] = propVal;
+                } );
+        }
+        return obj;
+    }
+
+}
+function badElVis( query, callback, config ) {
+
+    "use strict";
+
+    if ( window === 'undefined' || typeof query !== 'string' ) return;
+
+    config = config || {};
+
+    var timerInterval = 100,
+        visiblePercentage = config.part || 50,
+        visibleMilliseconds = config.time || 500,
+        additionalProp = config.find,
+        docFuncSelector = config.selector || 'class',
+        documentQuery = docFuncSelector === 'attr' ? '[' + query + ']' : query,
+        documentFunc = {
+            class:  'getElementsByClassName',
+            id:     'getElementById',
+            tag:    'getElementsByTagName',
+            attr:   'querySelectorAll'
+        };
+
+    /*
+    use querySelectorAll if the query contains advanced selectors/ pseudo-classes
+    */
+    if ( query.match( /[>.#:()\[\]]/ ) ) {
+        documentQuery = ( docFuncSelector == 'class' ? '.' : docFuncSelector == 'id' ? '#' : '' ) + documentQuery;
+        docFuncSelector = 'attr';
+    }
+
+    var elements = document[ documentFunc[ docFuncSelector ] ]( documentQuery );
+    if ( !elements || elements.length === 0 ) return;
+    var list = elements && elements.length ? [].slice.call( elements ) : [ elements ],
+        remaining = list.length;
+
+    list.forEach( checkElVis );
+
+    function checkElVis( el, i ) {
+        function check() {
+            badscrolls++;
+                document.getElementById('badscrolls').innerHTML = badscrolls;
+            if ( remaining === 0 ) {
+              window.removeEventListener( 'scroll', check );
+              document.getElementsByTagName("body")[0].className += " badDone"
+            }
+            if ( isElVis( el ) ) {
+                if ( !el.badcheck ) {
+                    if ( !el.badvis ) el.badvis = 0;
+                    if ( !el.badtimer ) el.badtimer = setInterval( function () {
+                        timer( el, i );
+                    }, timerInterval );
+                }
+            }
+            else if ( el.badtimer ) {
+                clearInterval( el.badtimer );
+                el.badtimer = undefined;
+            }
+        }
+        check();
+        window.addEventListener( 'scroll', check );
+    }
+
+    function timer( el, i ) {
+        el.badvis += timerInterval;
+        if ( el.badvis > visibleMilliseconds ) {
+            el.badcheck = true;
+            remaining--;
+            clearInterval( el.badtimer );
+            callback( {
+                item: i + 1 + '/' + list.length,
+                top: getOffsetTop( el ),
+                time: new Date().toISOString(),
+                props: getProps( el, {} )
+            }, el );
+        }
+    }
+
+    function isElVis( el ) {
+        badcalcs++;
+                document.getElementById('badcalcs').innerHTML = badcalcs;
+        var box = el.getBoundingClientRect(),
+            dom = window.innerHeight || document.documentElement.clientHeight;
+        if ( box.bottom - ( box.height * ( visiblePercentage / 100 ) ) < 0 || box.top + ( box.height * ( visiblePercentage / 100 ) ) > dom ) return false;
+        return true;
+    }
+
+    function getOffsetTop( el ) {
+        var box = el.getBoundingClientRect(),
+            body = document.body,
+            html = document.documentElement,
+            height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight ),
+            top = box.top + window.pageYOffset || html.scrollTop || body.scrollTop;
+        return Math.round( top ) + '/' + height;
+    }
+
+    function getProps( el, obj ) {
+        [].slice.call( el.attributes )
+            .forEach( function ( o ) {
+                if ( o.nodeName !== 'style' ) obj[ o.nodeName ] = o.nodeValue;
+            } );
+        if ( additionalProp ) {
+            [].slice.call( el.getElementsByTagName( '*' ) )
+                .map( function ( o ) {
+                    var propVal = o[ additionalProp ] || [].slice.call( o.attributes )
+                        .map( function ( a ) {
+                            if ( a.nodeName === additionalProp ) return a.nodeValue;
+                        } )
+                        .join( '' );
+                    if ( propVal && !obj[ additionalProp ] ) obj[ additionalProp ] = propVal;
+                } );
+        }
+        return obj;
+    }
+
+}
+
 
 
 </script>
