@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>elVis demo</title>
+<link href="http://drfront-prod.schibsted.tech/fvn/data/css/front-3.css" rel="stylesheet" type="text/css">
+<style>
+  #front-3 {
+    margin:0 auto!important;
+  }
+  .seen {
+    position: relative!important;
+    transition: all .5s cubic-bezier(0, 0, 0, 1);
+    background: rgba(255, 192, 203, 0.5);
+
+  }
+  .seen:after!important {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    content: '';
+    background: rgba(255, 192, 203, 0.5);
+  }
+</style>
+<script src="./../elVis.js"></script>
+</head>
+<body>
+
+  <div id="front-3" class="drfront"></div>
+
+<script>
+
+var xmlhttp = new XMLHttpRequest();
+
+xmlhttp.onreadystatechange = function() {
+    if (xmlhttp.readyState == XMLHttpRequest.DONE ) {
+       if (xmlhttp.status == 200) {
+
+         var parser = new DOMParser();
+         var doc = parser.parseFromString(xmlhttp.responseText, "text/html");
+         doc.innerHTML = xmlhttp.responseText;
+         var teasers = doc.getElementById('front-3').innerHTML;
+         document.getElementById('front-3').innerHTML = teasers;
+
+         initElvis();
+
+       }
+       else if (xmlhttp.status == 400) {
+          alert('There was an error 400');
+       }
+       else {
+           alert('something else other than 200 was returned');
+       }
+    }
+};
+
+xmlhttp.open("GET", "http://www.fvn.no", true);
+xmlhttp.send();
+
+function initElvis() {
+
+  elVis('df-container-inner > *', demoFunction, { part: 75, time: 1500 });
+
+  function demoFunction(o, el){
+
+    el.className += ' seen';
+    console.log(JSON.stringify(o,null,2));
+
+  };
+
+}
+
+
+</script>
+</body>
+</html>
